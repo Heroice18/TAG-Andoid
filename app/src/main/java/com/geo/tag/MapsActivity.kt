@@ -1,11 +1,15 @@
 package com.geo.tag
 
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -28,6 +32,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private lateinit var map: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val REQUEST_LOCATION_PERMISSION = 1
+    lateinit var mFusedLocationClient: FusedLocationProviderClient
+
+    val PERMISSION_ID = 42
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
@@ -36,8 +43,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment!!.getMapAsync(this)
         var fusedLocationProviderClient = FusedLocationProviderClient(this)
-
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
     }
+
+
+
+
 
     /**
      * Manipulates the map once available.
@@ -62,13 +74,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         map = googleMap
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
+        val current = LatLng(0.0,0.0)
         map.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+
+        enableMyLocation()
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? -> current = location }
+        Log.d("ASA","Current location is: " + current)
         //Add the user's location here
         map.moveCamera(CameraUpdateFactory.newLatLng(sydney))
         map.getUiSettings().setZoomControlsEnabled(true)
         map.setOnMarkerClickListener(this)
-        enableMyLocation()
+
     }
+
+
+
+
 
     private fun isPermissionGranted() : Boolean {
         return ContextCompat.checkSelfPermission(
@@ -131,4 +152,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
     }
     override fun onMarkerClick(p0: Marker?) = false
+
+
+
+
 }
