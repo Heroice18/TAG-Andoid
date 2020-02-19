@@ -8,8 +8,11 @@ import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.constraintlayout.widget.Constraints
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -22,6 +25,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.database.*
 import com.karumi.dexter.Dexter
 import kotlinx.android.synthetic.main.activity_maps.*
 import java.util.*
@@ -33,12 +37,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val REQUEST_LOCATION_PERMISSION = 1
     lateinit var mFusedLocationClient: FusedLocationProviderClient
+    private lateinit var database: DatabaseReference
+    private val markers = mutableListOf<LatLng>()
+
 
     val PERMISSION_ID = 42
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
         //setSupportActionBar(toolbar)
+
+        database = FirebaseDatabase.getInstance().reference
+
+
+        val tag_BTN = findViewById<Button>(R.id.Tag_it)
+        tag_BTN.setOnClickListener{
+            Toast.makeText(this, "Please tap the map to place a marker",
+                Toast.LENGTH_LONG).show()
+            setTagBTN()
+            return@setOnClickListener
+        }
 
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment!!.getMapAsync(this)
@@ -48,7 +66,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
 
-
+    val testing = LatLng(0.0,0.0)
 
 
     /**
@@ -60,6 +78,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+
+
+
     override fun onMapReady(googleMap: GoogleMap) {
 
         map = googleMap
@@ -75,20 +96,50 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
         val current = LatLng(0.0,0.0)
+
+        val locy = ""
         map.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
 
+        //Location() userLoc = new Location("")
+
+
         enableMyLocation()
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? -> current = location }
-        Log.d("ASA","Current location is: " + current)
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+            if(location == null) {
+                // TODO, handle it
+                Log.e("LOG N", "Location returned null")
+            } else location.apply {
+                // Handle location object
+                Log.e("LOG", "CHECKING " + location.toString())
+                val findLatitude = location.latitude
+                val findLongitude = location.longitude
+                Log.e("Test", "Lat is " + findLatitude + " Long is " + findLongitude)
+                val currentPos = LatLng(findLatitude, findLongitude)
+                Log.e("Test2", "Lat2 is " + currentPos)
+                val level = 16.0f
+                val rexTest = LatLng(43.8231, -111.7924)
+                map.moveCamera(CameraUpdateFactory.newLatLng(currentPos))
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPos, 16F))
+
+
+            }
+
+        }
+
         //Add the user's location here
-        map.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+
         map.getUiSettings().setZoomControlsEnabled(true)
         map.setOnMarkerClickListener(this)
 
     }
 
 
-
+    public fun setTagBTN(){
+        map.setOnMapClickListener {
+            map.addMarker(MarkerOptions().position(it))
+            map.setOnMapClickListener(null)
+        }
+    }
 
 
     private fun isPermissionGranted() : Boolean {

@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "777954223156-381vjk51the0esbppt8ggeus5u91sf9b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.geo.tag",
+            "certificate_hash": "4c1f4b540629ff24964bc9fa64193750c9a669b2"
+          }
+        },
+        {
           "client_id": "777954223156-khqmqdu39e44l43np3l5i046u6jvqcf2.apps.googleusercontent.com",
           "client_type": 3
         }
