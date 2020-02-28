@@ -39,7 +39,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     lateinit var mFusedLocationClient: FusedLocationProviderClient
     private lateinit var database: DatabaseReference
     private val markers = mutableListOf<LatLng>()
-
+    public val newMarkers = arrayListOf<LatLng>()
 
     val PERMISSION_ID = 42
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +48,88 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //setSupportActionBar(toolbar)
 
         database = FirebaseDatabase.getInstance().reference
+        val fireMarkers = arrayListOf<Any?>()
+        database.addListenerForSingleValueEvent(object :ValueEventListener{
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+
+
+                //fireMarkers.add(LatLng(0.0,0.0))
+                //fireMarkers.clear()
+
+                val test = 0
+                if (dataSnapshot.hasChild("Markers")) {
+                    Log.d("TAG", "Working Snap Markers" );
+                }
+                else {
+                    Log.d("TAG", "Working Snap Failed " + test);
+                }
+
+                //val coordinatesData = dataSnapshot.child()
+                   fireMarkers.add(dataSnapshot.getValue())
+                //val regexLatLng = "^(\-?\d+(\.\d+)?),\s*(\-?\d+(\.\d+)?)"
+
+
+
+                /*fireMarkers.forEach(){
+                    Log.d("TAG", "Data each is " + it)
+                    Log.d("TAG" , "Data at this point is: " + it + " + " + test)
+                    val markerValue = it.toString()
+                    val result = markerValue.replace("[^(\\-?\\d+(\\.\\d+)?),\\s*(\\-?\\d+(\\.\\d+)?)]".toRegex(), "")
+
+                    val checkResult = result.split(",").toTypedArray()
+                    val first = checkResult[0].toDouble()
+                    val second = checkResult[1].toDouble()
+                    val coordNew = LatLng(first, second)
+                    Log.d("TAG", "data coord are: " + coordNew)
+                    //newMarkers.add(coordNew)
+
+                    map.addMarker(MarkerOptions().position(coordNew).title("Marker is here"))
+                }*/
+
+                  /*  for (i in fireMarkers)
+                    {
+                        Log.d("TAG" , "Data at this point is: " + i + " + " + test)
+                        val markerValue = i.toString()
+                        val result = markerValue.replace("[^(\\-?\\d+(\\.\\d+)?),\\s*(\\-?\\d+(\\.\\d+)?)]".toRegex(), "")
+
+                        val checkResult = result.split(",").toTypedArray()
+                        val first = checkResult[0].toDouble()
+                        val second = checkResult[1].toDouble()
+                        val coordNew = LatLng(first, second)
+                        Log.d("TAG", "data coord are: " + coordNew)
+                        //newMarkers.add(coordNew)
+
+                        map.addMarker(MarkerOptions().position(coordNew).title("Marker is here"))
+                    }*/
+
+                for (location in fireMarkers)
+                {
+                    Log.d("DATA", "Check location: " + location)
+                    val markerValue = location.toString()
+                    //val result = markerValue.replace("[^(\\-?\\d+(\\.\\d+)?),\\s*(\\-?\\d+(\\.\\d+)?)]".toRegex(), "")
+                    val result = markerValue.replace(("[^\\bCoord=(-|)[0-9]*,\\s(-|)[0-9]*]").toRegex(), "")
+                    Log.d("TAG", "Check location RESULT are: " + result)
+                    val checkResult = result.split(",").toTypedArray()
+                    Log.d("TAG", "Check location RESULT SPLIT are: " + checkResult)
+                    val first = checkResult[0].toDouble()
+                    val second = checkResult[1].toDouble()
+                    val coordNew = LatLng(first, second)
+
+
+                }
+
+                //Log.e("TAG", "Snapshot from Firebase is: " + post)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                //print error.message
+                Log.e("TAG", "Snap didn't work " + error)
+            }
+        })
+
+        //database.child("Rexburg")
+
+
 
 
         val tag_BTN = findViewById<Button>(R.id.Tag_it)
@@ -83,7 +165,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     override fun onMapReady(googleMap: GoogleMap) {
 
-        map = googleMap
+        //map = googleMap
         /*val latitude = 37.422160
         val longitude = -122.084270
         val homeLatLng = LatLng(latitude, longitude)
@@ -96,6 +178,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
         val current = LatLng(0.0,0.0)
+
+
 
         val locy = ""
         map.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
