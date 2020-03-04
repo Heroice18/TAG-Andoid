@@ -49,12 +49,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         database = FirebaseDatabase.getInstance().reference
         val fireMarkers = arrayListOf<Any?>()
-        database.addListenerForSingleValueEvent(object :ValueEventListener{
+        val coordMarkers = arrayListOf<Any?>()
+        val markerLocation = database.child("Markers")
+        markerLocation.addListenerForSingleValueEvent(object :ValueEventListener{
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-
-
-                //fireMarkers.add(LatLng(0.0,0.0))
-                //fireMarkers.clear()
 
                 val test = 0
                 if (dataSnapshot.hasChild("Markers")) {
@@ -64,61 +62,46 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     Log.d("TAG", "Working Snap Failed " + test);
                 }
 
-                //val coordinatesData = dataSnapshot.child()
-                   fireMarkers.add(dataSnapshot.getValue())
-                //val regexLatLng = "^(\-?\d+(\.\d+)?),\s*(\-?\d+(\.\d+)?)"
 
 
+                val regexCordinates = "[^\\b(-|)[0-9]*,\\s(-|)[0-9]*[0-9]]"
+                for (ds in dataSnapshot.children){
+                    Log.d("TAG","Check the DS: " + ds)
+                    val markerData = ds.getValue().toString()
 
-                /*fireMarkers.forEach(){
-                    Log.d("TAG", "Data each is " + it)
-                    Log.d("TAG" , "Data at this point is: " + it + " + " + test)
-                    val markerValue = it.toString()
-                    val result = markerValue.replace("[^(\\-?\\d+(\\.\\d+)?),\\s*(\\-?\\d+(\\.\\d+)?)]".toRegex(), "")
+                    val coordData = markerData.substringAfter("Coord=".substringBefore("Title"))
 
-                    val checkResult = result.split(",").toTypedArray()
-                    val first = checkResult[0].toDouble()
-                    val second = checkResult[1].toDouble()
-                    val coordNew = LatLng(first, second)
-                    Log.d("TAG", "data coord are: " + coordNew)
-                    //newMarkers.add(coordNew)
+                    val res = markerData.replace("[^0-9,-.]".toRegex(),"")
+                    Log.d("TAG", "Check the replace: " + res)
 
-                    map.addMarker(MarkerOptions().position(coordNew).title("Marker is here"))
-                }*/
+                    val titleData = markerData.substringAfter("Title=")
+                    val titleSplit = titleData.replace("}", "")
+                    Log.d("TAG", "Check title: " + titleSplit)
 
-                  /*  for (i in fireMarkers)
-                    {
-                        Log.d("TAG" , "Data at this point is: " + i + " + " + test)
-                        val markerValue = i.toString()
-                        val result = markerValue.replace("[^(\\-?\\d+(\\.\\d+)?),\\s*(\\-?\\d+(\\.\\d+)?)]".toRegex(), "")
+                    val worldMap = res.split(",")
+                    val coordLat = worldMap[0].toDouble()
+                    val coordLon = worldMap[1].toDouble()
 
-                        val checkResult = result.split(",").toTypedArray()
-                        val first = checkResult[0].toDouble()
-                        val second = checkResult[1].toDouble()
-                        val coordNew = LatLng(first, second)
-                        Log.d("TAG", "data coord are: " + coordNew)
-                        //newMarkers.add(coordNew)
+                    Log.d("TAG", "Check total data, latitude: " + coordLat + " Longitude: " + coordLon)
 
-                        map.addMarker(MarkerOptions().position(coordNew).title("Marker is here"))
-                    }*/
-
-                for (location in fireMarkers)
-                {
-                    Log.d("DATA", "Check location: " + location)
-                    val markerValue = location.toString()
-                    //val result = markerValue.replace("[^(\\-?\\d+(\\.\\d+)?),\\s*(\\-?\\d+(\\.\\d+)?)]".toRegex(), "")
-                    val result = markerValue.replace(("[^\\bCoord=(-|)[0-9]*,\\s(-|)[0-9]*]").toRegex(), "")
-                    Log.d("TAG", "Check location RESULT are: " + result)
-                    val checkResult = result.split(",").toTypedArray()
-                    Log.d("TAG", "Check location RESULT SPLIT are: " + checkResult)
-                    val first = checkResult[0].toDouble()
-                    val second = checkResult[1].toDouble()
-                    val coordNew = LatLng(first, second)
+                    map.addMarker(MarkerOptions().position(LatLng(coordLat,coordLon)).title(titleSplit))
 
 
+                    Log.d("TAG", "Check the Substring: " + coordData)
+                    Log.d("TAG", "Check the Data: " + markerData)
                 }
 
-                //Log.e("TAG", "Snapshot from Firebase is: " + post)
+                fireMarkers.add(dataSnapshot.getValue())
+
+
+                fireMarkers.groupBy{it}.forEach{it, coordMarkers ->
+                    Log.d("TAG" ,"Checking for data:  " + it)
+                }
+
+
+
+
+
             }
 
             override fun onCancelled(error: DatabaseError) {
