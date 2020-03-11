@@ -23,39 +23,20 @@
             android:layout_height="match_parent"
             tools:context=".MapsActivity"
             tools:layout_editor_absoluteX="16dp"
-            tools:layout_editor_absoluteY="128dp" />
+            tools:layout_editor_absoluteY="128dp"/>
+
 
         <Button
             android:id="@+id/Tag_it"
             android:layout_width="138dp"
             android:layout_height="93dp"
-            android:layout_marginBottom="24dp"
-            android:text="TAG!"
+
+            android:layout_alignParentEnd="true"
             android:background="@drawable/round_btn"
-            app:layout_constraintBottom_toTopOf="@+id/scrollView2"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.941"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:text="TAG!"
+            tools:layout_editor_absoluteX="221dp"
+            tools:layout_editor_absoluteY="391dp" />
 
-        <ScrollView
-            android:id="@+id/scrollView2"
-            android:layout_width="match_parent"
-            android:layout_height="130dp"
-            android:background="#FF0000"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/map"
-            app:layout_constraintVertical_bias="1.0">
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-        </ScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

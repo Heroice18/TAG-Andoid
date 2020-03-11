@@ -1,6 +1,7 @@
 package com.geo.tag
 
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -9,9 +10,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
+import android.view.ViewGroup
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.Constraints
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -40,6 +41,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private lateinit var database: DatabaseReference
     private val markers = mutableListOf<LatLng>()
     public val newMarkers = arrayListOf<LatLng>()
+    public var markerTitle = String()
 
     val PERMISSION_ID = 42
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,40 +67,53 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
                 val regexCordinates = "[^\\b(-|)[0-9]*,\\s(-|)[0-9]*[0-9]]"
-                for (ds in dataSnapshot.children){
-                    Log.d("TAG","Check the DS: " + ds)
-                    val markerData = ds.getValue().toString()
 
-                    val coordData = markerData.substringAfter("Coord=".substringBefore("Title"))
+                if(dataSnapshot.hasChildren()) {
+                    for (ds in dataSnapshot.children) {
+                        Log.d("TAG", "Check the DS: " + ds)
+                        val markerData = ds.getValue().toString()
 
-                    val res = markerData.replace("[^0-9,-.]".toRegex(),"")
-                    Log.d("TAG", "Check the replace: " + res)
+                        val coordData = markerData.substringAfter("Coord=".substringBefore("Title"))
 
-                    val titleData = markerData.substringAfter("Title=")
-                    val titleSplit = titleData.replace("}", "")
-                    Log.d("TAG", "Check title: " + titleSplit)
+                        val res = markerData.replace("[^0-9,-.]".toRegex(), "")
+                        Log.d("TAG", "Check the replace: " + res)
 
-                    val worldMap = res.split(",")
-                    val coordLat = worldMap[0].toDouble()
-                    val coordLon = worldMap[1].toDouble()
+                        val titleData = markerData.substringAfter("title=")
+                        val titleSplit = titleData.replace("}", "")
+                        Log.d("TAG", "Check title: " + titleSplit)
 
-                    Log.d("TAG", "Check total data, latitude: " + coordLat + " Longitude: " + coordLon)
+                        val worldMap = res.split(",")
+                        val coordLat = worldMap[0].toDouble()
+                        val coordLon = worldMap[1].toDouble()
 
-                    map.addMarker(MarkerOptions().position(LatLng(coordLat,coordLon)).title(titleSplit))
+                        Log.d(
+                            "TAG",
+                            "Check total data, latitude: " + coordLat + " Longitude: " + coordLon
+                        )
+
+                        map.addMarker(
+                            MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                titleSplit
+                            )
+                        )
 
 
-                    Log.d("TAG", "Check the Substring: " + coordData)
-                    Log.d("TAG", "Check the Data: " + markerData)
+                        Log.d("TAG", "Check the Substring: " + coordData)
+                        Log.d("TAG", "Check the Data: " + markerData)
+                    }
+
+                    fireMarkers.add(dataSnapshot.getValue())
+
+
+                    fireMarkers.groupBy { it }.forEach { it, coordMarkers ->
+                        Log.d("TAG", "Checking for data:  " + it)
+                    }
+
                 }
+                else
+                {
 
-                fireMarkers.add(dataSnapshot.getValue())
-
-
-                fireMarkers.groupBy{it}.forEach{it, coordMarkers ->
-                    Log.d("TAG" ,"Checking for data:  " + it)
                 }
-
-
 
 
 
@@ -113,6 +128,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         //database.child("Rexburg")
 
 
+        val scrollView = HorizontalScrollView(this)
+        val layout = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        scrollView.layoutParams= layout
+        val linearLayout1 = findViewById<RelativeLayout>(R.id.layoutFilter)
+        linearLayout1?.addView(scrollView)
+
+        val bathImage = ImageView(this)
+        //bathImage.setImageResource(R.mipmap.B)
 
 
         val tag_BTN = findViewById<Button>(R.id.Tag_it)
@@ -201,12 +224,59 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
 
+    /*
+    This function adds the tag to the map
+    */
+
     public fun setTagBTN(){
+
+
+
         map.setOnMapClickListener {
-            map.addMarker(MarkerOptions().position(it))
+
+            val inflater = layoutInflater
+
+            val confirmTag = AlertDialog.Builder(this)
+            confirmTag.setMessage("Are you sure you want to place a tag at this location?")
+
+            val dialogLayout = inflater.inflate(R.layout.alert_dialog_text, null)
+
+            val editText = dialogLayout.findViewById<EditText>(R.id.editTextAlert)
+            confirmTag.setView(dialogLayout)
+
+            //val dialogSearch = dialogLayout.findViewById<EditText>(R.id.editTextAlert).toString()
+
+            confirmTag.setPositiveButton("Confirm")
+            {dialogInterface, i ->
+
+
+
+                markerTitle = editText.text.toString()
+
+                val addMarker = markerToData(it, markerTitle)
+                val check = it
+                Log.d("DAD", "Coord are:  " + check)
+                database.child("Markers").child(markerTitle).setValue(addMarker)
+                //database.child("Markers").child(markerTitle).child("Title").setValue(markerTitle)
+
+                map.addMarker(MarkerOptions().position(it).title(markerTitle))
+
+                Toast.makeText(applicationContext,
+                "Input f EditText is " + markerTitle,
+                Toast.LENGTH_SHORT).show()}
+
+            confirmTag.show()
+
             map.setOnMapClickListener(null)
         }
     }
+
+
+    data class markerToData(
+        var coordinate: LatLng? = LatLng(0.0,0.0),
+        var title: String? = ""
+
+    )
 
 
     private fun isPermissionGranted() : Boolean {
