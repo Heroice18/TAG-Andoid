@@ -8,4 +8,39 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter the text here"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Please choose a filter"
+        />
+    <RadioGroup
+        android:id="@+id/filterGroup"
+        android:layout_width="175dp"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/bathroomRadio"
+            android:layout_width="122dp"
+            android:layout_height="wrap_content"
+            android:text="Bathroom" />
+
+        <RadioButton
+            android:id="@+id/educationalRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Educational" />
+
+        <RadioButton
+            android:id="@+id/parksRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Parks" />
+
+        <RadioButton
+            android:id="@+id/healthRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Health" />
+    </RadioGroup>
+
 </LinearLayout>

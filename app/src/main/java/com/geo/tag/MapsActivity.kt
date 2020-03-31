@@ -47,96 +47,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        //setSupportActionBar(toolbar)
 
-        database = FirebaseDatabase.getInstance().reference
-        val fireMarkers = arrayListOf<Any?>()
-        val coordMarkers = arrayListOf<Any?>()
-        val markerLocation = database.child("Markers")
-        markerLocation.addListenerForSingleValueEvent(object :ValueEventListener{
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
+        connectDatabase()
 
-                val test = 0
-                if (dataSnapshot.hasChild("Markers")) {
-                    Log.d("TAG", "Working Snap Markers" );
-                }
-                else {
-                    Log.d("TAG", "Working Snap Failed " + test);
-                }
-
-
-
-                val regexCordinates = "[^\\b(-|)[0-9]*,\\s(-|)[0-9]*[0-9]]"
-
-                if(dataSnapshot.hasChildren()) {
-                    for (ds in dataSnapshot.children) {
-                        Log.d("TAG", "Check the DS: " + ds)
-                        val markerData = ds.getValue().toString()
-
-                        val coordData = markerData.substringAfter("Coord=".substringBefore("Title"))
-
-                        val res = markerData.replace("[^0-9,-.]".toRegex(), "")
-                        Log.d("TAG", "Check the replace: " + res)
-
-                        val titleData = markerData.substringAfter("title=")
-                        val titleSplit = titleData.replace("}", "")
-                        Log.d("TAG", "Check title: " + titleSplit)
-
-                        val worldMap = res.split(",")
-                        val coordLat = worldMap[0].toDouble()
-                        val coordLon = worldMap[1].toDouble()
-
-                        Log.d(
-                            "TAG",
-                            "Check total data, latitude: " + coordLat + " Longitude: " + coordLon
-                        )
-
-                        map.addMarker(
-                            MarkerOptions().position(LatLng(coordLat, coordLon)).title(
-                                titleSplit
-                            )
-                        )
-
-
-                        Log.d("TAG", "Check the Substring: " + coordData)
-                        Log.d("TAG", "Check the Data: " + markerData)
-                    }
-
-                    fireMarkers.add(dataSnapshot.getValue())
-
-
-                    fireMarkers.groupBy { it }.forEach { it, coordMarkers ->
-                        Log.d("TAG", "Checking for data:  " + it)
-                    }
-
-                }
-                else
-                {
-
-                }
-
-
-
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                //print error.message
-                Log.e("TAG", "Snap didn't work " + error)
-            }
-        })
-
-        //database.child("Rexburg")
-
-
-        val scrollView = HorizontalScrollView(this)
-        val layout = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        scrollView.layoutParams= layout
-        val linearLayout1 = findViewById<RelativeLayout>(R.id.layoutFilter)
-        linearLayout1?.addView(scrollView)
-
-        val bathImage = ImageView(this)
-        //bathImage.setImageResource(R.mipmap.B)
-
+        setImageClick()
 
         val tag_BTN = findViewById<Button>(R.id.Tag_it)
         tag_BTN.setOnClickListener{
@@ -151,6 +65,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         var fusedLocationProviderClient = FusedLocationProviderClient(this)
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+
+
     }
 
 
@@ -230,8 +147,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     public fun setTagBTN(){
 
-
-
         map.setOnMapClickListener {
 
             val inflater = layoutInflater
@@ -244,32 +159,40 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             val editText = dialogLayout.findViewById<EditText>(R.id.editTextAlert)
             confirmTag.setView(dialogLayout)
 
-            //val dialogSearch = dialogLayout.findViewById<EditText>(R.id.editTextAlert).toString()
+            val group = findViewById<RadioGroup>(R.id.filterGroup)
+            val groupId = group.checkedRadioButtonId
+            if(groupId == -1)
+            {
+                Toast.makeText(this, "Please select a filter",
+                    Toast.LENGTH_LONG).show()
+            }
+            else {
+                confirmTag.setPositiveButton("Confirm")
+                { dialogInterface, i ->
 
-            confirmTag.setPositiveButton("Confirm")
-            {dialogInterface, i ->
+                    markerTitle = editText.text.toString()
 
+                    val addMarker = markerToData(it, markerTitle)
+                    val check = it
+                    Log.d("DAD", "Coord are:  " + check)
+                    database.child("Markers").child(markerTitle).setValue(addMarker)
 
+                    map.addMarker(MarkerOptions().position(it).title(markerTitle))
 
-                markerTitle = editText.text.toString()
-
-                val addMarker = markerToData(it, markerTitle)
-                val check = it
-                Log.d("DAD", "Coord are:  " + check)
-                database.child("Markers").child(markerTitle).setValue(addMarker)
-                //database.child("Markers").child(markerTitle).child("Title").setValue(markerTitle)
-
-                map.addMarker(MarkerOptions().position(it).title(markerTitle))
-
-                Toast.makeText(applicationContext,
-                "Input f EditText is " + markerTitle,
-                Toast.LENGTH_SHORT).show()}
-
+                    Toast.makeText(
+                        applicationContext,
+                        "Input f EditText is " + markerTitle,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
             confirmTag.show()
 
             map.setOnMapClickListener(null)
         }
     }
+
+
 
 
     data class markerToData(
@@ -286,6 +209,83 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     }
 
+    private fun connectDatabase(){
+        database = FirebaseDatabase.getInstance().reference
+        val fireMarkers = arrayListOf<Any?>()
+        val coordMarkers = arrayListOf<Any?>()
+        val markerLocation = database.child("Markers")
+        markerLocation.addListenerForSingleValueEvent(object :ValueEventListener{
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+
+                val test = 0
+                if (dataSnapshot.hasChild("Markers")) {
+                    Log.d("TAG", "Working Snap Markers" );
+                }
+                else {
+                    Log.d("TAG", "Working Snap Failed " + test);
+                }
+
+
+
+                val regexCordinates = "[^\\b(-|)[0-9]*,\\s(-|)[0-9]*[0-9]]"
+
+                if(dataSnapshot.hasChildren()) {
+                    for (ds in dataSnapshot.children) {
+                        Log.d("TAG", "Check the DS: " + ds)
+                        val markerData = ds.getValue().toString()
+
+                        val coordData = markerData.substringAfter("Coord=".substringBefore("Title"))
+
+                        val res = markerData.replace("[^0-9,-.]".toRegex(), "")
+                        Log.d("TAG", "Check the replace: " + res)
+
+                        val titleData = markerData.substringAfter("title=")
+                        val titleSplit = titleData.replace("}", "")
+                        Log.d("TAG", "Check title: " + titleSplit)
+
+                        val worldMap = res.split(",")
+                        val coordLat = worldMap[0].toDouble()
+                        val coordLon = worldMap[1].toDouble()
+
+                        Log.d(
+                            "TAG",
+                            "Check total data, latitude: " + coordLat + " Longitude: " + coordLon
+                        )
+
+                        map.addMarker(
+                            MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                titleSplit
+                            )
+                        )
+
+
+                        Log.d("TAG", "Check the Substring: " + coordData)
+                        Log.d("TAG", "Check the Data: " + markerData)
+                    }
+
+                    fireMarkers.add(dataSnapshot.getValue())
+
+
+                    fireMarkers.groupBy { it }.forEach { it, coordMarkers ->
+                        Log.d("TAG", "Checking for data:  " + it)
+                    }
+
+                }
+                else
+                {
+
+                }
+
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                //print error.message
+                Log.e("TAG", "Snap didn't work " + error)
+            }
+        })
+
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -295,6 +295,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 enableMyLocation()
             }
         }
+    }
+
+    private fun setImageClick(){
+        val bathroomImage = findViewById<ImageView>(R.id.bathroom)
+        bathroomImage.setOnClickListener{
+            Toast.makeText(this@MapsActivity, "You clicked on Bathroom.", Toast.LENGTH_SHORT).show()
+        }
+        val educationalImage = findViewById<ImageView>(R.id.educational)
+        educationalImage.setOnClickListener {
+            Toast.makeText(this@MapsActivity, "You clicked on Educational.", Toast.LENGTH_SHORT).show()
+        }
+        val parksImage= findViewById<ImageView>(R.id.parks)
+        parksImage.setOnClickListener {
+            Toast.makeText(this@MapsActivity, "You clicked on Parks.", Toast.LENGTH_SHORT).show()
+        }
+        val healthImage = findViewById<ImageView>(R.id.hospital)
+        healthImage.setOnClickListener {
+            Toast.makeText(this@MapsActivity, "You clicked on Hospital.", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
     private fun enableMyLocation() {
