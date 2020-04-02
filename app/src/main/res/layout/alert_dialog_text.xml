@@ -19,25 +19,25 @@
         android:layout_height="wrap_content">
 
         <RadioButton
-            android:id="@+id/bathroomRadio"
+            android:id="@+id/Bathroom"
             android:layout_width="122dp"
             android:layout_height="wrap_content"
             android:text="Bathroom" />
 
         <RadioButton
-            android:id="@+id/educationalRadio"
+            android:id="@+id/Educational"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Educational" />
 
         <RadioButton
-            android:id="@+id/parksRadio"
+            android:id="@+id/Parks"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Parks" />
 
         <RadioButton
-            android:id="@+id/healthRadio"
+            android:id="@+id/Health"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Health" />

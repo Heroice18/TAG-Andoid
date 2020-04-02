@@ -23,18 +23,19 @@
             tools:layout_editor_absoluteX="-162dp"
             tools:layout_editor_absoluteY="-225dp" />
 
-        <Button
+        <ImageButton
             android:id="@+id/Tag_it"
             android:layout_width="138dp"
             android:layout_height="93dp"
 
             android:layout_alignParentEnd="true"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="28dp"
             android:background="@drawable/round_btn"
-            android:text="TAG!"
+            android:src="@mipmap/tag_it_btn_round"
+
             app:layout_constraintBottom_toTopOf="@+id/horizontalScrollView"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.882"
+            app:layout_constraintHorizontal_bias="0.941"
             app:layout_constraintStart_toStartOf="parent" />
 
         <HorizontalScrollView
@@ -58,7 +59,7 @@
 
 
                 <ImageView
-                    android:id="@+id/bathroom"
+                    android:id="@+id/bathroomImg"
                     android:layout_width="95dp"
                     android:layout_height="95dp"
                     android:layout_marginLeft="50dp"
@@ -66,7 +67,7 @@
                     android:src="@mipmap/bathroom" />
 
                 <ImageView
-                    android:id="@+id/educational"
+                    android:id="@+id/educationalImg"
                     android:layout_width="95dp"
                     android:layout_height="95dp"
                     android:layout_marginLeft="50dp"
@@ -74,7 +75,7 @@
                     android:src="@mipmap/library" />
 
                 <ImageView
-                    android:id="@+id/parks"
+                    android:id="@+id/parksImg"
                     android:layout_width="95dp"
                     android:layout_height="95dp"
                     android:layout_marginLeft="50dp"
@@ -82,12 +83,20 @@
                     android:src="@mipmap/parks" />
 
                 <ImageView
-                    android:id="@+id/hospital"
+                    android:id="@+id/healthImg"
                     android:layout_width="95dp"
                     android:layout_height="95dp"
                     android:layout_marginLeft="50dp"
                     android:layout_marginRight="50dp"
                     android:src="@mipmap/hospital" />
+
+                <ImageView
+                    android:id="@+id/clearImg"
+                    android:layout_width="95dp"
+                    android:layout_height="95dp"
+                    android:layout_marginLeft="50dp"
+                    android:layout_marginRight="50dp"
+                    android:src="@mipmap/clear_all" />
 
 
             </LinearLayout>

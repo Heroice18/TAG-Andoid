@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.Constraints
@@ -23,12 +24,14 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.database.*
 import com.karumi.dexter.Dexter
 import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.android.synthetic.main.alert_dialog_text.*
 import java.util.*
 import java.util.jar.Manifest
 
@@ -40,19 +43,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     lateinit var mFusedLocationClient: FusedLocationProviderClient
     private lateinit var database: DatabaseReference
     private val markers = mutableListOf<LatLng>()
+    private val mapBathroom = mutableListOf<Marker>()
+    private val mapEducational = mutableListOf<Marker>()
+    private val mapHealth = mutableListOf<Marker>()
+    private val mapPark = mutableListOf<Marker>()
     public val newMarkers = arrayListOf<LatLng>()
     public var markerTitle = String()
 
     val PERMISSION_ID = 42
     override fun onCreate(savedInstanceState: Bundle?) {
+//        this.requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_maps)
 
         connectDatabase()
 
         setImageClick()
 
-        val tag_BTN = findViewById<Button>(R.id.Tag_it)
+        val tag_BTN = findViewById<ImageButton>(R.id.Tag_it)
         tag_BTN.setOnClickListener{
             Toast.makeText(this, "Please tap the map to place a marker",
                 Toast.LENGTH_LONG).show()
@@ -88,15 +97,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     override fun onMapReady(googleMap: GoogleMap) {
 
-        //map = googleMap
-        /*val latitude = 37.422160
-        val longitude = -122.084270
-        val homeLatLng = LatLng(latitude, longitude)
-        val zoomLevel = 15f
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(homeLatLng, zoomLevel))
-        map.addMarker(MarkerOptions().position(homeLatLng))
-        setMarker(map)
-        setPoiClick(map)*/
         map = googleMap
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
@@ -158,36 +158,96 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
             val editText = dialogLayout.findViewById<EditText>(R.id.editTextAlert)
             confirmTag.setView(dialogLayout)
+            val selectedFilter = dialogLayout.findViewById<RadioGroup>(R.id.filterGroup)
+            selectedFilter.check(R.id.Bathroom)
 
-            val group = findViewById<RadioGroup>(R.id.filterGroup)
-            val groupId = group.checkedRadioButtonId
-            if(groupId == -1)
-            {
-                Toast.makeText(this, "Please select a filter",
-                    Toast.LENGTH_LONG).show()
-            }
-            else {
+
+
+
+            //val selectedFilterOption = resources.getResourceEntryName(filterID)
+
+
+
+            //val group = findViewById<RadioGroup>(R.id.filterGroup)
+            //val groupId = group.checkedRadioButtonId
+
+            /*if(group != null) {
+                group.setOnCheckedChangeListener(RadioGroup.OnCheckedChangeListener() { radioGroup, i ->
+                    Toast.makeText(
+                        this, "Selected filter is " + i,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+                )
+            }*/
+
+            /*val dView = getLayoutInflater().inflate(R.layout.alert_dialog_text, null)
+            val grouped = dView.findViewById<RadioGroup>(R.id.filterGroup)
+            grouped.setOnCheckedChangeListener(
+                RadioGroup.OnCheckedChangeListener { group, checkedId ->
+                    val selectedButton = grouped.findViewById<RadioButton>(checkedId)
+                    Log.d("TAG", "Filter Selected is " + selectedButton)
+                })*/
+
+
                 confirmTag.setPositiveButton("Confirm")
-                { dialogInterface, i ->
+                { dialoginterface, i ->
+
+                    val filterID = selectedFilter.checkedRadioButtonId
+                    val filterIDString = resources.getResourceEntryName(filterID)
+                    Log.d("TAG", "Selected Filter is: " + filterIDString)
 
                     markerTitle = editText.text.toString()
 
-                    val addMarker = markerToData(it, markerTitle)
+                    val addMarker = markerToData(it, markerTitle, filterIDString)
                     val check = it
                     Log.d("DAD", "Coord are:  " + check)
                     database.child("Markers").child(markerTitle).setValue(addMarker)
 
-                    map.addMarker(MarkerOptions().position(it).title(markerTitle))
+                    Toast.makeText(this, "Please select a filter",
+                        Toast.LENGTH_LONG).show()
+
+
+                    if(filterIDString == "Bathroom") {
+                        val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                        map.addMarker(MarkerOptions().position(it).title(markerTitle).snippet("Filter: " + filterIDString).icon(markerColor))
+                        mapBathroom.add(map.addMarker(MarkerOptions().position(it).title(markerTitle).snippet("Filter: " + filterIDString).icon(markerColor)))
+                    }
+                    else if(filterIDString == "Educational")
+                    {
+                        val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)
+                        map.addMarker(MarkerOptions().position(it).title(markerTitle).snippet("Filter: " + filterIDString).icon(markerColor))
+                        mapEducational.add(map.addMarker(MarkerOptions().position(it).title(markerTitle).snippet("Filter: " + filterIDString).icon(markerColor)))
+                    }
+                    else if (filterIDString == "Health")
+                    {
+                        val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
+                        map.addMarker(MarkerOptions().position(it).title(markerTitle).snippet("Filter: " + filterIDString).icon(markerColor))
+                        mapHealth.add(map.addMarker(MarkerOptions().position(it).title(markerTitle).snippet("Filter: " + filterIDString).icon(markerColor)))
+                    }
+                    else if (filterIDString == "Parks")
+                    {
+                        val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+                        map.addMarker(MarkerOptions().position(it).title(markerTitle).snippet("Filter: " + filterIDString).icon(markerColor))
+                        mapPark.add(map.addMarker(MarkerOptions().position(it).title(markerTitle).snippet("Filter: " + filterIDString).icon(markerColor)))
+                    }
+                    else
+                    {
+                        val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                        map.addMarker(MarkerOptions().position(it).title(markerTitle).snippet("Filter: " + filterIDString).icon(markerColor))
+                    }
 
                     Toast.makeText(
                         applicationContext,
-                        "Input f EditText is " + markerTitle,
+                        "Thanks! You've tagged " + markerTitle,
                         Toast.LENGTH_SHORT
                     ).show()
-                }
-            }
-            confirmTag.show()
 
+                }
+
+            confirmTag.show()
+            //val confirmButton = confirmTag.setPositiveButton()
             map.setOnMapClickListener(null)
         }
     }
@@ -197,7 +257,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     data class markerToData(
         var coordinate: LatLng? = LatLng(0.0,0.0),
-        var title: String? = ""
+        var title: String? = "",
+        var filter: String? = ""
 
     )
 
@@ -238,12 +299,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                         val res = markerData.replace("[^0-9,-.]".toRegex(), "")
                         Log.d("TAG", "Check the replace: " + res)
+                        val resFinal = res.substring(1)
 
                         val titleData = markerData.substringAfter("title=")
                         val titleSplit = titleData.replace("}", "")
                         Log.d("TAG", "Check title: " + titleSplit)
 
-                        val worldMap = res.split(",")
+                        val filterData = markerData.substringAfter("filter=")
+                        //val filterSplit = filterData.replace("", "")
+                        val filterSplit = filterData.substringBefore(",")
+                        Log.d("TAG", "Check filter: " + filterSplit)
+
+                        val worldMap = resFinal.split(",")
+                        Log.e("Check", "WorldMap is: " + worldMap)
                         val coordLat = worldMap[0].toDouble()
                         val coordLon = worldMap[1].toDouble()
 
@@ -252,11 +320,66 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                             "Check total data, latitude: " + coordLat + " Longitude: " + coordLon
                         )
 
-                        map.addMarker(
-                            MarkerOptions().position(LatLng(coordLat, coordLon)).title(
-                                titleSplit
+                        if(filterSplit == "Bathroom") {
+                            val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                            map.addMarker(
+                                MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                    titleSplit
+                                ).snippet("Filter: " + filterSplit).icon(markerColor)
                             )
-                        )
+                            mapBathroom.add(map.addMarker(MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                titleSplit
+                            ).snippet("Filter: " + filterSplit).icon(markerColor)
+                            ))
+                        }
+                        else if(filterSplit == "Educational")
+                        {
+                            val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)
+                            map.addMarker(
+                                MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                    titleSplit
+                                ).snippet("Filter: " + filterSplit).icon(markerColor)
+                            )
+                            mapEducational.add(map.addMarker(MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                titleSplit
+                            ).snippet("Filter: " + filterSplit).icon(markerColor)
+                            ))
+                        }
+                        else if (filterSplit == "Health")
+                        {
+                            val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
+                            map.addMarker(
+                                MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                    titleSplit
+                                ).snippet("Filter: " + filterSplit).icon(markerColor)
+                            )
+                            mapHealth.add(map.addMarker(MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                titleSplit
+                            ).snippet("Filter: " + filterSplit).icon(markerColor)))
+                        }
+                        else if (filterSplit == "Parks")
+                        {
+                            val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+                            map.addMarker(
+                                MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                    titleSplit
+                                ).snippet("Filter: " + filterSplit).icon(markerColor)
+                            )
+                            mapPark.add(map.addMarker( MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                titleSplit
+                            ).snippet("Filter: " + filterSplit).icon(markerColor)))
+                        }
+                        else
+                        {
+                            val markerColor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                            map.addMarker(
+                                MarkerOptions().position(LatLng(coordLat, coordLon)).title(
+                                    titleSplit
+                                ).snippet("Filter: " + filterSplit).icon(markerColor)
+                            )
+                        }
+
+
 
 
                         Log.d("TAG", "Check the Substring: " + coordData)
@@ -298,21 +421,146 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
     private fun setImageClick(){
-        val bathroomImage = findViewById<ImageView>(R.id.bathroom)
+        val bathroomImage = findViewById<ImageView>(R.id.bathroomImg)
         bathroomImage.setOnClickListener{
+
+            map.clear()
+            for (mark in mapBathroom)
+            {
+                val markPos = mark.position
+                Log.d("TAG", "Mark pos: " + markPos)
+                val markTitle = mark.title
+                Log.d("TAG", "Mark Title: " + markTitle)
+                val markSnip = mark.snippet
+                Log.d("TAG", "Mark snippet: " + markSnip)
+                val markIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+
+                map.addMarker(MarkerOptions().position(markPos).title(markTitle).snippet(markSnip).icon(markIcon))
+            }
             Toast.makeText(this@MapsActivity, "You clicked on Bathroom.", Toast.LENGTH_SHORT).show()
         }
-        val educationalImage = findViewById<ImageView>(R.id.educational)
+        val educationalImage = findViewById<ImageView>(R.id.educationalImg)
         educationalImage.setOnClickListener {
+
+            map.clear()
+            for (mark in mapEducational)
+            {
+                val markPos = mark.position
+                Log.d("TAG", "Mark pos: " + markPos)
+                val markTitle = mark.title
+                Log.d("TAG", "Mark Title: " + markTitle)
+                val markSnip = mark.snippet
+                Log.d("TAG", "Mark snippet: " + markSnip)
+                val markIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)
+
+                map.addMarker(MarkerOptions().position(markPos).title(markTitle).snippet(markSnip).icon(markIcon))
+            }
+            Toast.makeText(this@MapsActivity, "You clicked on Bathroom.", Toast.LENGTH_SHORT).show()
+
+
+
             Toast.makeText(this@MapsActivity, "You clicked on Educational.", Toast.LENGTH_SHORT).show()
         }
-        val parksImage= findViewById<ImageView>(R.id.parks)
+        val parksImage= findViewById<ImageView>(R.id.parksImg)
         parksImage.setOnClickListener {
+
+            map.clear()
+            for (mark in mapPark)
+            {
+                val markPos = mark.position
+                Log.d("TAG", "Mark pos: " + markPos)
+                val markTitle = mark.title
+                Log.d("TAG", "Mark Title: " + markTitle)
+                val markSnip = mark.snippet
+                Log.d("TAG", "Mark snippet: " + markSnip)
+                val markIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+
+                map.addMarker(MarkerOptions().position(markPos).title(markTitle).snippet(markSnip).icon(markIcon))
+            }
+            Toast.makeText(this@MapsActivity, "You clicked on Bathroom.", Toast.LENGTH_SHORT).show()
+
+
             Toast.makeText(this@MapsActivity, "You clicked on Parks.", Toast.LENGTH_SHORT).show()
         }
-        val healthImage = findViewById<ImageView>(R.id.hospital)
+        val healthImage = findViewById<ImageView>(R.id.healthImg)
         healthImage.setOnClickListener {
+
+            map.clear()
+            for (mark in mapHealth)
+            {
+                val markPos = mark.position
+                Log.d("TAG", "Mark pos: " + markPos)
+                val markTitle = mark.title
+                Log.d("TAG", "Mark Title: " + markTitle)
+                val markSnip = mark.snippet
+                Log.d("TAG", "Mark snippet: " + markSnip)
+                val markIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
+
+                map.addMarker(MarkerOptions().position(markPos).title(markTitle).snippet(markSnip).icon(markIcon))
+            }
+            Toast.makeText(this@MapsActivity, "You clicked on Bathroom.", Toast.LENGTH_SHORT).show()
+
+
             Toast.makeText(this@MapsActivity, "You clicked on Hospital.", Toast.LENGTH_SHORT).show()
+        }
+
+
+        val clearImage = findViewById<ImageView>(R.id.clearImg)
+        clearImage.setOnClickListener {
+            map.clear()
+            for (mark in mapHealth)
+            {
+                val markPos = mark.position
+                Log.d("TAG", "Mark pos: " + markPos)
+                val markTitle = mark.title
+                Log.d("TAG", "Mark Title: " + markTitle)
+                val markSnip = mark.snippet
+                Log.d("TAG", "Mark snippet: " + markSnip)
+                val markIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
+
+                map.addMarker(MarkerOptions().position(markPos).title(markTitle).snippet(markSnip).icon(markIcon))
+            }
+
+            for (mark in mapPark)
+            {
+                val markPos = mark.position
+                Log.d("TAG", "Mark pos: " + markPos)
+                val markTitle = mark.title
+                Log.d("TAG", "Mark Title: " + markTitle)
+                val markSnip = mark.snippet
+                Log.d("TAG", "Mark snippet: " + markSnip)
+                val markIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+
+                map.addMarker(MarkerOptions().position(markPos).title(markTitle).snippet(markSnip).icon(markIcon))
+            }
+
+            for (mark in mapEducational)
+            {
+                val markPos = mark.position
+                Log.d("TAG", "Mark pos: " + markPos)
+                val markTitle = mark.title
+                Log.d("TAG", "Mark Title: " + markTitle)
+                val markSnip = mark.snippet
+                Log.d("TAG", "Mark snippet: " + markSnip)
+                val markIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)
+
+                map.addMarker(MarkerOptions().position(markPos).title(markTitle).snippet(markSnip).icon(markIcon))
+            }
+
+            for (mark in mapBathroom)
+            {
+                val markPos = mark.position
+                Log.d("TAG", "Mark pos: " + markPos)
+                val markTitle = mark.title
+                Log.d("TAG", "Mark Title: " + markTitle)
+                val markSnip = mark.snippet
+                Log.d("TAG", "Mark snippet: " + markSnip)
+                val markIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+
+                map.addMarker(MarkerOptions().position(markPos).title(markTitle).snippet(markSnip).icon(markIcon))
+            }
+            Toast.makeText(this@MapsActivity, "You clicked on Clear Filters.", Toast.LENGTH_SHORT).show()
+
         }
 
     }
@@ -330,6 +578,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 REQUEST_LOCATION_PERMISSION
             )
         }
+
+
     }
 
 
